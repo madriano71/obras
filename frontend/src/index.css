@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-slate-900 font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism Styles */
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-white/30 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  /* Kanban Column Styles */
+  .kanban-column-todo {
+    @apply bg-slate-100/50 backdrop-blur-sm border-slate-200;
+  }
+
+  .kanban-column-doing {
+    @apply bg-blue-50/50 backdrop-blur-sm border-blue-200;
+  }
+
+  .kanban-column-impediment {
+    @apply bg-red-50/50 backdrop-blur-sm border-red-200;
+  }
+
+  .kanban-column-awaiting_tests {
+    @apply bg-amber-50/50 backdrop-blur-sm border-amber-200;
+  }
+
+  .kanban-column-done {
+    @apply bg-emerald-50/50 backdrop-blur-sm border-emerald-200;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg focus:ring-blue-500/50;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-300;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 shadow-md hover:shadow-lg focus:ring-red-500/50;
+  }
+
+  /* Input Styles */
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all;
+  }
+
+  /* Label Styles */
+  .label {
+    @apply block text-sm font-semibold text-slate-700 mb-1.5 ml-1;
+  }
+}
