@@ -14,7 +14,11 @@ export async function connectToMongo() {
     }
 
     try {
-        const mongoUrl = `${config.mongodbUrl}/${config.databaseName}`;
+        const baseUrl = config.mongodbUrl.endsWith('/')
+            ? config.mongodbUrl.slice(0, -1)
+            : config.mongodbUrl;
+
+        const mongoUrl = `${baseUrl}/${config.databaseName}`;
         console.log(`Conectando ao MongoDB: ${mongoUrl}`);
 
         await mongoose.connect(mongoUrl);
