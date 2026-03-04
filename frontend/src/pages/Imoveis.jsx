@@ -78,33 +78,45 @@ export function Imoveis() {
         setEditingImovel(null);
     }
 
-    if (loading) {
-        return <div className="text-center py-12">Carregando...</div>;
-    }
-
     return (
         <div className="space-y-8 pb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Imóveis</h1>
-                    <p className="text-slate-500 font-medium">Gerencie suas propriedades e projetos</p>
+                    <p className="text-slate-500 font-medium italic">Gerencie suas propriedades e projetos</p>
                 </div>
-                <button
-                    onClick={handleNew}
-                    className="btn btn-primary flex items-center justify-center space-x-2 w-full sm:w-auto"
-                >
-                    <Plus size={20} />
-                    <span>Novo Imóvel</span>
-                </button>
+                {!loading && (
+                    <button
+                        onClick={handleNew}
+                        className="btn btn-primary flex items-center justify-center space-x-2 w-full sm:w-auto"
+                    >
+                        <Plus size={20} />
+                        <span>Novo Imóvel</span>
+                    </button>
+                )}
             </div>
 
-            {imoveis.length === 0 ? (
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((it) => (
+                        <div key={it} className="card animate-pulse bg-white/50 border-slate-100 min-h-[160px] flex items-center justify-center">
+                            <div className="w-8 h-8 border-4 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
+                        </div>
+                    ))}
+                </div>
+            ) : imoveis.length === 0 ? (
                 <div className="card text-center py-20 bg-slate-50/50 border-dashed border-2">
                     <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Plus size={40} className="text-slate-300" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">Nenhum imóvel cadastrado</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">Comece cadastrando seu primeiro imóvel para gerenciar os orçamentos da obra.</p>
+                    <p className="text-slate-500 max-w-sm mx-auto mb-6">Comece cadastrando seu primeiro imóvel para gerenciar os orçamentos da obra.</p>
+                    <button
+                        onClick={handleNew}
+                        className="btn btn-secondary"
+                    >
+                        Criar Primeiro Imóvel
+                    </button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -118,10 +130,10 @@ export function Imoveis() {
                                         </span>
                                     </div>
                                     <h3 className="text-xl font-black text-slate-900 tracking-tight capitalize">
-                                        {imovel.cliente}
+                                        {imovel.cliente || 'Sem Cliente'}
                                     </h3>
                                 </div>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-1 opacity-100 transition-opacity">
                                     <button
                                         onClick={() => handleEdit(imovel)}
                                         className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all"
@@ -137,19 +149,8 @@ export function Imoveis() {
                                 </div>
                             </div>
 
-                            <div className="space-y-3 pt-6 border-t border-slate-50">
-                                <div className="flex items-start gap-3">
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest w-20 pt-1">Endereço</div>
-                                    <div className="text-sm text-slate-600 font-medium">
-                                        <p>{imovel.endereco.rua}, {imovel.endereco.numero}</p>
-                                        <p>{imovel.endereco.bairro}</p>
-                                        <p className="text-xs text-slate-400 mt-1">{imovel.endereco.cidade} - {imovel.endereco.estado}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest w-20">CEP</div>
-                                    <div className="text-sm text-slate-500 font-semibold">{imovel.endereco.cep}</div>
-                                </div>
+                            <div className="space-y-3 pt-6 border-t border-slate-50 text-slate-600">
+                                <p className="text-sm font-medium">{imovel.endereco}</p>
                             </div>
 
                             <div className="mt-8 flex justify-end">

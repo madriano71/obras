@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -131,116 +132,107 @@ export function Kanban() {
         }
     }
 
-    if (loading) {
-        return <div className="text-center py-12">Carregando...</div>;
-    }
-
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="h-full flex flex-col space-y-6">
+            <div className="flex justify-between items-center shrink-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Gerenciamento de Fluxo</h1>
-                    <p className="text-slate-600">Acompanhe o andamento dos serviços contratados</p>
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fluxo de Tarefas</h1>
+                    <p className="text-slate-500 font-medium italic">Acompanhe o andamento dos serviços contratados</p>
                 </div>
-                <button
-                    onClick={handleSync}
-                    disabled={syncing}
-                    className={`btn ${syncing ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'} flex items-center space-x-2 border shadow-sm transition-all`}
-                    title="Sincronizar orçamentos aprovados"
-                >
-                    <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} />
-                    <span>{syncing ? 'Sincronizando...' : 'Sincronizar Orçamentos'}</span>
-                </button>
+                {!loading && (
+                    <button
+                        onClick={handleSync}
+                        disabled={syncing}
+                        className={`btn ${syncing ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'} flex items-center space-x-2 border shadow-sm transition-all`}
+                        title="Sincronizar orçamentos aprovados"
+                    >
+                        <Plus size={18} className={syncing ? 'animate-spin' : ''} />
+                        <span>{syncing ? 'Sincronizando...' : 'Sincronizar'}</span>
+                    </button>
+                )}
             </div>
 
-            <DragDropContext onDragEnd={handleDragEnd}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
                     {COLUMNS.map(column => (
                         <div key={column.id} className="flex flex-col">
-                            <div className={`${column.className} rounded-t-lg border-2 px-4 py-3`}>
+                            <div className={`${column.className} rounded-t-lg border-2 px-4 py-3 opacity-50`}>
                                 <h2 className="font-semibold text-slate-900">{column.title}</h2>
-                                <span className="text-sm text-slate-600">
-                                    {tarefas[column.id]?.length || 0} tarefas
-                                </span>
+                                <span className="text-sm text-slate-600">Calculando...</span>
                             </div>
-
-                            <Droppable droppableId={column.id}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={`flex-1 p-2 min-h-[500px] ${snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-slate-50'
-                                            } border-2 border-t-0 ${column.className} rounded-b-lg`}
-                                    >
-                                        {tarefas[column.id]?.map((tarefa, index) => (
-                                            <Draggable
-                                                key={tarefa.id}
-                                                draggableId={tarefa.id}
-                                                index={index}
-                                            >
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        className={`card mb-2 ${snapshot.isDragging ? 'shadow-lg' : ''
-                                                            }`}
-                                                    >
-                                                        <h3 className="font-medium text-slate-900 mb-1">
-                                                            {tarefa.titulo}
-                                                        </h3>
-                                                        {tarefa.descricao && (
-                                                            <p className="text-sm text-slate-600 line-clamp-2">
-                                                                {tarefa.descricao}
-                                                            </p>
-                                                        )}
-                                                        <div className="mt-3 flex items-center justify-between border-t pt-2">
-                                                            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${tarefa.prioridade === 'alta' ? 'bg-red-100 text-red-700' :
-                                                                tarefa.prioridade === 'media' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    'bg-slate-100 text-slate-600'
-                                                                }`}>
-                                                                {tarefa.prioridade}
-                                                            </span>
-
-                                                            <div className="flex gap-1">
-                                                                {tarefa.status === 'orcamento' && (
-                                                                    <button
-                                                                        onClick={() => moveTarefa(tarefa.id, 'doing')}
-                                                                        className="text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded font-bold transition-colors"
-                                                                    >
-                                                                        Iniciar
-                                                                    </button>
-                                                                )}
-                                                                {tarefa.status === 'doing' && (
-                                                                    <button
-                                                                        onClick={() => moveTarefa(tarefa.id, 'done')}
-                                                                        className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-2 py-1 rounded font-bold transition-colors"
-                                                                    >
-                                                                        Concluir
-                                                                    </button>
-                                                                )}
-                                                                {tarefa.status === 'done' && (
-                                                                    <button
-                                                                        onClick={() => moveTarefa(tarefa.id, 'doing')}
-                                                                        className="text-[10px] bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-1 rounded font-bold transition-colors"
-                                                                    >
-                                                                        Refazer
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
+                            <div className="flex-1 p-4 bg-slate-50 border-2 border-t-0 border-slate-100 rounded-b-lg flex items-center justify-center">
+                                <div className="w-8 h-8 border-3 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
+                            </div>
                         </div>
                     ))}
                 </div>
-            </DragDropContext>
+            ) : (
+                <DragDropContext onDragEnd={handleDragEnd}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0 overflow-hidden">
+                        {COLUMNS.map(column => (
+                            <div key={column.id} className="flex flex-col">
+                                <div className={`${column.className} rounded-t-lg border-2 px-4 py-3`}>
+                                    <h2 className="font-semibold text-slate-900">{column.title}</h2>
+                                    <span className="text-sm text-slate-600">
+                                        {tarefas[column.id]?.length || 0} tarefas
+                                    </span>
+                                </div>
+
+                                <Droppable droppableId={column.id}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            className={`flex-1 p-2 min-h-[500px] ${snapshot.isDraggingOver ? 'bg-slate-100' : 'bg-slate-50'
+                                                } border-2 border-t-0 ${column.className} rounded-b-lg overflow-y-auto`}
+                                        >
+                                            {tarefas[column.id]?.map((tarefa, index) => (
+                                                <Draggable
+                                                    key={tarefa.id}
+                                                    draggableId={tarefa.id}
+                                                    index={index}
+                                                >
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            style={{
+                                                                ...provided.draggableProps.style,
+                                                                zIndex: snapshot.isDragging ? 9999 : 'auto',
+                                                            }}
+                                                            className={`card mb-2 ${snapshot.isDragging ? 'shadow-xl ring-2 ring-blue-500/50' : ''
+                                                                }`}
+                                                        >
+                                                            <h3 className="font-medium text-slate-900 mb-1">
+                                                                {tarefa.titulo}
+                                                            </h3>
+                                                            {tarefa.descricao && (
+                                                                <p className="text-sm text-slate-600 line-clamp-2">
+                                                                    {tarefa.descricao}
+                                                                </p>
+                                                            )}
+                                                            <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                                {tarefa.prioridade || 'Normal'}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                            {tarefas[column.id]?.length === 0 && (
+                                                <div className="py-12 text-center text-slate-400 text-xs italic">
+                                                    Nenhuma tarefa nesta coluna
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </div>
+                        ))}
+                    </div>
+                </DragDropContext>
+            )}
         </div>
     );
 }

@@ -8,14 +8,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { Clock } from 'lucide-react';
 
 export function PrivateRoute({ children }) {
-    const { user, loading } = useAuth();
+    const { user, loading, logout } = useAuth();
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-slate-600">Carregando...</p>
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin" />
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-[10px] animate-pulse">Autenticando...</p>
                 </div>
             </div>
         );
@@ -27,29 +27,37 @@ export function PrivateRoute({ children }) {
 
     if (!user.is_approved) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="card max-w-md text-center shadow-xl border-slate-200">
-                    <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Clock size={32} />
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+                <div className="card max-w-md w-full text-center shadow-2xl border-none p-8 space-y-6">
+                    <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto rotate-3">
+                        <Clock size={40} />
                     </div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Aguardando Aprovação</h2>
-                    <p className="text-slate-600 mb-8 leading-relaxed">
-                        Sua conta foi criada com sucesso, mas ainda precisa ser <span className="font-bold text-slate-900">aprovada por um administrador</span> antes de acessar o sistema.
-                    </p>
-                    <div className="space-y-3">
+                    <div>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">Aguardando Aprovação</h2>
+                        <p className="text-slate-500 mt-3 font-medium">
+                            Sua conta enviada para análise. <br />
+                            <span className="text-slate-900 font-bold">Aguarde a liberação do administrador</span> para acessar o painel.
+                        </p>
+                    </div>
+
+                    <div className="pt-4 space-y-3">
                         <button
                             onClick={() => window.location.reload()}
-                            className="btn btn-primary w-full shadow-lg shadow-blue-200"
+                            className="btn btn-primary w-full py-4 text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-200"
                         >
-                            Verificar Novamente
+                            Verificar Agora
                         </button>
                         <button
                             onClick={logout}
-                            className="btn btn-secondary w-full"
+                            className="btn btn-secondary w-full py-4 text-sm font-black uppercase tracking-widest"
                         >
-                            Sair da Conta
+                            Sair do Sistema
                         </button>
                     </div>
+
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                        Obras App v2.0
+                    </p>
                 </div>
             </div>
         );
