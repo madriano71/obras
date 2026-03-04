@@ -17,10 +17,7 @@ export async function connectToMongo() {
         const mongoUrl = `${config.mongodbUrl}/${config.databaseName}`;
         console.log(`Conectando ao MongoDB: ${mongoUrl}`);
 
-        await mongoose.connect(mongoUrl, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(mongoUrl);
 
         isConnected = true;
         console.log('✅ Conexão com MongoDB estabelecida com sucesso');
