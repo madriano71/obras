@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Building2, Layers, DollarSign, ListTodo, Receipt, Wrench } from 'lucide-react';
+import { Building2, Layers, DollarSign, ListTodo, Receipt, Wrench, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -69,7 +69,13 @@ export function Dashboard() {
         { title: 'Total de Imóveis', value: stats?.totais?.total_imoveis || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
         { title: 'Dependências', value: stats?.totais?.total_dependencias || 0, icon: Layers, color: 'text-indigo-600', bg: 'bg-indigo-50' },
         { title: 'Custos Aprovados', value: `R$ ${(stats?.totais?.valor_total_aprovado || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`, icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { title: 'Tarefas Ativas', value: stats?.totais?.total_tarefas || 0, icon: ListTodo, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { title: 'Tarefas Ativas', value: stats?.totais?.total_tarefas || 0, icon: ListTodo, color: 'text-slate-600', bg: 'bg-slate-50' },
+    ];
+
+    const kanbanCards = [
+        { title: 'Orçamento', value: stats?.tarefas_por_status?.find(t => t.status === 'orcamento')?.count || 0, icon: Receipt, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { title: 'Em Andamento', value: stats?.tarefas_por_status?.find(t => t.status === 'doing')?.count || 0, icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { title: 'Concluído', value: stats?.tarefas_por_status?.find(t => t.status === 'done')?.count || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
     return (
@@ -99,6 +105,25 @@ export function Dashboard() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            <div className="space-y-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Status do Kanban</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {kanbanCards.map((card, i) => (
+                        <div key={i} className="card group hover:shadow-xl transition-all duration-300 border-l-4" style={{ borderLeftColor: card.color.includes('amber') ? '#f59e0b' : card.color.includes('blue') ? '#3b82f6' : '#10b981' }}>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{card.title}</h3>
+                                    <p className="text-4xl font-black text-slate-900 tracking-tighter mt-1">{card.value}</p>
+                                </div>
+                                <div className={cn("p-4 rounded-2xl", card.bg, card.color)}>
+                                    <card.icon size={32} />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -3,10 +3,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { X, Receipt, Building2, User, DollarSign, FileText } from 'lucide-react';
+import { X, Receipt, Building2, User, DollarSign, FileText, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
 
-export function OrcamentoModal({ isOpen, onClose, onSave, imoveis, dependencias, fornecedores, itens, orcamento = null }) {
+export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, dependencias, fornecedores, itens, orcamento = null }) {
     const [formData, setFormData] = useState({
         dependencia_id: '',
         tipo_obra_id: '',
@@ -245,6 +245,34 @@ export function OrcamentoModal({ isOpen, onClose, onSave, imoveis, dependencias,
                                 </p>
                             )}
                         </div>
+
+                        {orcamento && orcamento.status === 'aprovado' && (
+                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-500 text-white rounded-xl shadow-sm">
+                                        <CheckCircle2 size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-black text-emerald-900 leading-tight">Orçamento Aprovado</p>
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Aprovação confirmada</p>
+                                    </div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer group">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (confirm('Tem certeza que deseja remover a aprovação deste orçamento? Isso removerá a tarefa vinculada do Kanban.')) {
+                                                onUnapprove(orcamento.id);
+                                                onClose();
+                                            }
+                                        }}
+                                        className="btn bg-white hover:bg-red-50 text-red-600 border-red-100 text-[10px] py-1.5 px-3 h-auto min-h-0 font-black uppercase tracking-wider"
+                                    >
+                                        Remover Aprovação
+                                    </button>
+                                </label>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center justify-end space-x-3 pt-8 mt-4 border-t border-slate-100">

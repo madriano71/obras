@@ -568,6 +568,52 @@ router.patch('/orcamentos/:id/aprovar', authenticate, requireApproved, async (re
     }
 });
 
+// Desaprovar um orçamento (volta para pendente e remove tarefa do Kanban)
+router.patch('/orcamentos/:id/desaprovar', authenticate, requireApproved, async (req, res) => {
+    try {
+        const orc = await Orcamento.findById(req.params.id);
+        if (!orc) {
+            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+        }
+
+        if (orc.status !== 'aprovado') {
+            return res.status(400).json({ detail: 'Apenas orçamentos aprovados podem ser desaprovados' });
+        }
+
+        // Verifica se a tarefa vinculada ainda está no estágio inicial 'orcamento'
+        const tarefa = await Tarefa.findOne({ orcamento_id: orc._id });
+
+        if (tarefa && tarefa.status !== 'orcamento') {
+            return res.status(400).json({
+                detail: 'Não é possível desaprovar este orçamento pois o serviço já está em andamento ou foi concluído no Kanban.'
+            });
+        }
+
+        // Se a tarefa existir e estiver no estágio inicial, remove ela
+        if (tarefa) {
+            await Tarefa.findByIdAndDelete(tarefa._id);
+
+            // Reorganiza ordens na coluna 'orcamento'
+            await Tarefa.updateMany(
+                { status: 'orcamento', ordem: { $gt: tarefa.ordem } },
+                { $inc: { ordem: -1 } }
+            );
+        }
+
+        // Volta o orçamento para pendente
+        orc.status = 'pendente';
+        orc.updated_at = new Date();
+        await orc.save();
+
+        res.json({
+            message: 'Aprovação removida com sucesso. O orçamento voltou para o estado pendente e a tarefa foi removida do Kanban.',
+            id: orc._id
+        });
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
 // ===== TAREFAS =====
 router.get('/tarefas', authenticate, requireApproved, async (req, res) => {
     try {
@@ -810,10 +856,10 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
 
         res.json({
             totais: {
-                imoveis: totalImoveis,
-                dependencias: totalDeps,
-                orcamentos: totalOrcs,
-                tarefas: totalTarefas,
+                total_imoveis: totalImoveis,
+                total_dependencias: totalDeps,
+                total_orcamentos: totalOrcs,
+                total_tarefas: totalTarefas,
                 valor_total_orcamentos: valorTotal[0]?.total || 0,
                 valor_total_aprovado: valorAprovado[0]?.total || 0,
             },

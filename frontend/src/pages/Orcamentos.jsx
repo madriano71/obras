@@ -115,6 +115,18 @@ export function Orcamentos() {
         }
     }
 
+    async function handleUnapprove(id) {
+        try {
+            await api.patch(`/orcamentos/${id}/desaprovar`);
+            toast.success('Aprovação removida com sucesso');
+            loadOrcamentos();
+        } catch (error) {
+            console.error('Erro ao desaprovar orçamento:', error);
+            const detail = error.response?.data?.detail || 'Erro ao remover aprovação';
+            toast.error(detail);
+        }
+    }
+
     async function handleDelete(id) {
         if (!confirm('Tem certeza que deseja deletar este orçamento?')) return;
 
@@ -456,6 +468,7 @@ export function Orcamentos() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSave}
+                onUnapprove={handleUnapprove}
                 imoveis={imoveis}
                 dependencias={dependencias}
                 fornecedores={fornecedores}
