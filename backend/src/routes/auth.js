@@ -17,6 +17,7 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log(`Tentativa de login recebida para: ${email}`);
         const clientIp = getClientIp(req);
         const emailLower = email.toLowerCase();
 
@@ -42,6 +43,7 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ email: emailLower });
 
         if (!user || !(await verifyPassword(password, user.password_hash))) {
+            console.log(`Login falhou: Email ou senha incorretos para ${emailLower}`);
             // Registra tentativa falha
             await registerAttempt(clientIp);
             await registerAttempt(emailLower);

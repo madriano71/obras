@@ -20,11 +20,22 @@ export function Login() {
         setLoading(true);
 
         try {
+            console.log('Iniciando login...');
+            console.log('API URL:', import.meta.env.VITE_API_URL || '/api');
             await login(email, password);
             toast.success('Login realizado com sucesso!');
             navigate('/');
         } catch (error) {
-            const message = error.response?.data?.detail || 'Erro ao fazer login';
+            console.error('Erro detalhado no login:', error);
+            if (error.response) {
+                console.error('Dados da resposta:', error.response.data);
+                console.error('Status da resposta:', error.response.status);
+            } else if (error.request) {
+                console.error('Nenhuma resposta recebida (Network/CORS error)');
+            } else {
+                console.error('Erro ao configurar requisição:', error.message);
+            }
+            const message = error.response?.data?.detail || 'Erro ao fazer login. Verifique o console do navegador para detalhes.';
             toast.error(message);
         } finally {
             setLoading(false);
