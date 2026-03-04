@@ -18,10 +18,31 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
-app.use(cors({
-    origin: config.corsOrigins,
+
+// Configuração robusta de CORS com logs
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permite requisições sem origin (como mobile apps ou curl)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = config.corsOrigins.map(o => o.trim());
+
+        console.log(`CORS Request - Origin: ${origin}`);
+        console.log(`CORS Allowed: ${JSON.stringify(allowedOrigins)}`);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            console.error(`CORS Bloqueado para a origem: ${origin}`);
+            callback(null, false);
+        }
+    },
     credentials: true,
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
