@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { FileText, Download, User, MapPin, Package, RefreshCw, Building2, Filter } from 'lucide-react';
+import { FileText, Download, User, Building2, Filter } from 'lucide-react';
 
 export function RelatorioOrcamentos() {
     const [relatorio, setRelatorio] = useState([]);

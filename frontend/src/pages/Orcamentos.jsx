@@ -8,8 +8,8 @@ import api from '../services/api';
 import { toast } from 'sonner';
 import {
     Plus, Receipt, Building2, Trash2, Edit,
-    CheckCircle2, XCircle, Clock, Filter, Search,
-    ArrowUpDown, FileText, LayoutGrid, Table as TableIcon
+    CheckCircle2, XCircle, Clock, Filter,
+    FileText, LayoutGrid, Table as TableIcon
 } from 'lucide-react';
 import { OrcamentoModal } from '../components/OrcamentoModal';
 import { cn } from '../lib/utils';
