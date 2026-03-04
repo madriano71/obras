@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Building2, Layers, DollarSign, ListTodo, Receipt, Wrench, CheckCircle } from 'lucide-react';
+import { Building2, Layers, DollarSign, ListTodo, Receipt, Wrench, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -123,6 +123,38 @@ export function Dashboard() {
                             </div>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Resumo Financeiro</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="card group hover:shadow-xl transition-all duration-300 border-l-4 border-emerald-500 bg-emerald-50/10">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pago (Efetivado)</h3>
+                                <p className="text-4xl font-black text-emerald-600 tracking-tighter mt-1">
+                                    R$ {(stats?.totais?.valor_pago || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600">
+                                <CheckCircle size={32} />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card group hover:shadow-xl transition-all duration-300 border-l-4 border-amber-500 bg-amber-50/10">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pendente (Não Efetivado)</h3>
+                                <p className="text-4xl font-black text-amber-600 tracking-tighter mt-1">
+                                    R$ {(stats?.totais?.valor_pendente || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                            <div className="p-4 rounded-2xl bg-amber-100 text-amber-600">
+                                <Clock size={32} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

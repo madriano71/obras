@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { toast } from 'sonner';
 import {
@@ -14,6 +15,7 @@ import { OrcamentoModal } from '../components/OrcamentoModal';
 import { cn } from '../lib/utils';
 
 export function Orcamentos() {
+    const navigate = useNavigate();
     const [imoveis, setImoveis] = useState([]);
     const [selectedImovel, setSelectedImovel] = useState('');
     const [dependencias, setDependencias] = useState([]);
@@ -87,6 +89,10 @@ export function Orcamentos() {
 
     async function handleSave(formData) {
         try {
+            if (!formData) {
+                loadOrcamentos();
+                return;
+            }
             if (editingOrcamento) {
                 await api.put(`/orcamentos/${editingOrcamento.id}`, formData);
                 toast.success('Orçamento atualizado com sucesso!');
@@ -198,6 +204,14 @@ export function Orcamentos() {
                             <TableIcon size={20} />
                         </button>
                     </div>
+
+                    <button
+                        onClick={() => navigate('/relatorio-orcamentos')}
+                        className="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-100 transition-all shadow-sm group"
+                        title="Relatórios de Orçamentos"
+                    >
+                        <FileText size={20} className="group-hover:scale-110 transition-transform" />
+                    </button>
                     <button
                         onClick={() => { setEditingOrcamento(null); setIsModalOpen(true); }}
                         className="btn btn-primary flex items-center justify-center space-x-2 w-full sm:w-auto"

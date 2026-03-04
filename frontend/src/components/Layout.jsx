@@ -25,7 +25,6 @@ export function Layout() {
         { name: 'Itens', href: '/tipos-obra', icon: Wrench },
         { name: 'Fornecedores', href: '/fornecedores', icon: Users },
         { name: 'Orçamentos', href: '/orcamentos', icon: Receipt },
-        { name: 'Relatório', href: '/relatorio-orcamentos', icon: FileText },
         { name: 'Produtos', href: '/produtos', icon: ShoppingCart },
         { name: 'Kanban', href: '/kanban', icon: Kanban },
     ];

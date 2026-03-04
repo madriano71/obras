@@ -1,19 +1,46 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { FileText, Download, User, MapPin, Package, RefreshCw } from 'lucide-react';
+import { FileText, Download, User, MapPin, Package, RefreshCw, Building2, Filter } from 'lucide-react';
 
 export function RelatorioOrcamentos() {
     const [relatorio, setRelatorio] = useState([]);
+    const [imoveis, setImoveis] = useState([]);
+    const [selectedImovel, setSelectedImovel] = useState('');
     const [loading, setLoading] = useState(true);
 
+    console.log('RelatorioOrcamentos v2 loaded');
+
     useEffect(() => {
-        loadRelatorio();
+        loadBaseData();
     }, []);
+
+    useEffect(() => {
+        if (selectedImovel) {
+            loadRelatorio();
+        }
+    }, [selectedImovel]);
+
+    async function loadBaseData() {
+        try {
+            const response = await api.get('/imoveis');
+            setImoveis(response.data);
+            if (response.data.length > 0) {
+                setSelectedImovel(response.data[0].id);
+            } else {
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar imóveis:', error);
+            setLoading(false);
+        }
+    }
 
     async function loadRelatorio() {
         setLoading(true);
         try {
-            const response = await api.get('/orcamentos/relatorio-por-fornecedor');
+            const response = await api.get('/orcamentos/relatorio-por-fornecedor', {
+                params: { imovel_id: selectedImovel }
+            });
             setRelatorio(response.data);
         } catch (error) {
             console.error('Erro ao carregar relatório:', error);
@@ -24,18 +51,107 @@ export function RelatorioOrcamentos() {
 
     const valorTotalGeral = relatorio.reduce((acc, grupo) => acc + (grupo.total || 0), 0);
 
+    const handleExportPDF = () => {
+        window.print();
+    };
+
     return (
         <div className="space-y-8 pb-12 animate-in fade-in duration-700">
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    @page {
+                        margin: 1.5cm;
+                        size: A4;
+                    }
+                    nav, header, aside, .no-print, button, select, .filter-container {
+                        display: none !important;
+                    }
+                    body {
+                        background: white !important;
+                        padding: 0 !important;
+                    }
+                    .main-content {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        width: 100% !important;
+                    }
+                    .card {
+                        box-shadow: none !important;
+                        border: 1px solid #e2e8f0 !important;
+                        margin-bottom: 2rem !important;
+                        page-break-inside: avoid;
+                    }
+                    .bg-slate-900 {
+                        background-color: #0f172a !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .text-white {
+                        color: white !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .bg-emerald-500\/20 {
+                        background-color: #ecfdf5 !important;
+                        border-color: #10b981 !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .text-emerald-400 {
+                        color: #059669 !important;
+                    }
+                    h1 {
+                        font-size: 24pt !important;
+                    }
+                }
+            `}} />
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Relatório de Orçamentos</h1>
-                    <p className="text-slate-500 font-medium italic">Consolidado de orçamentos aprovados por fornecedor</p>
+                    <p className="text-slate-500 font-medium italic">Lista de compras: Apenas orçamentos aprovados e não iniciados</p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Investimento Total Aprovado</span>
-                    <div className="bg-slate-900 text-white px-6 py-2 rounded-2xl text-2xl font-black shadow-xl whitespace-nowrap">
-                        R$ {valorTotalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleExportPDF}
+                        disabled={loading || relatorio.length === 0}
+                        className="no-print btn bg-white border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                        <Download size={18} />
+                        <span>Exportar PDF</span>
+                    </button>
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Investimento Total Aprovado</span>
+                        <div className="bg-slate-900 text-white px-6 py-2 rounded-2xl text-2xl font-black shadow-xl whitespace-nowrap">
+                            R$ {valorTotalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Seletor de Imóvel */}
+            <div className="filter-container card bg-white/50 backdrop-blur-sm border-slate-200/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                        <Building2 size={24} />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Imóvel Selecionado</label>
+                        <select
+                            value={selectedImovel}
+                            onChange={(e) => setSelectedImovel(e.target.value)}
+                            className="bg-transparent border-none p-0 text-lg font-bold text-slate-900 focus:ring-0 cursor-pointer"
+                        >
+                            {imoveis.map(i => (
+                                <option key={i.id} value={i.id}>{i.tipo} - {i.cliente}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 text-slate-400 text-sm font-medium px-4 py-2 bg-slate-100/50 rounded-xl">
+                    <Filter size={16} />
+                    <span>{relatorio.length} fornecedores com itens aprovados</span>
                 </div>
             </div>
 
@@ -49,17 +165,17 @@ export function RelatorioOrcamentos() {
                     <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mb-6">
                         <FileText size={40} className="text-slate-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Sem orçamentos aprovados</h3>
-                    <p className="text-slate-500 max-w-sm">Nenhum orçamento foi marcado como "Escolhido" ainda. Somente orçamentos aprovados aparecem neste relatório.</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Sem itens pendentes de compra</h3>
+                    <p className="text-slate-500 max-w-sm">Nenhum orçamento aprovado foi encontrado para compra. Itens que já iniciaram no Kanban ou foram concluídos não aparecem aqui.</p>
                 </div>
             ) : (
                 <div className="space-y-12">
                     {relatorio.map((grupo) => (
-                        <div key={grupo._id} className="card p-0 overflow-hidden border-none shadow-xl bg-white">
+                        <div key={grupo._id} className="card p-0 overflow-hidden border-none shadow-xl bg-white printable-card">
                             {/* Cabeçalho do Grupo (Fornecedor) */}
                             <div className="bg-slate-900 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-2.5 bg-white/10 text-white rounded-xl">
+                                    <div className="p-2.5 bg-white/10 text-white rounded-xl no-print">
                                         <User size={20} />
                                     </div>
                                     <div>
@@ -85,7 +201,7 @@ export function RelatorioOrcamentos() {
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Dependência / Item</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Valor</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Doc</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center no-print">Doc</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -105,7 +221,7 @@ export function RelatorioOrcamentos() {
                                                         R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
+                                                <td className="px-6 py-4 text-center no-print">
                                                     {orc.arquivo_url ? (
                                                         <a
                                                             href={`http://localhost:8000/${orc.arquivo_url}`}
@@ -130,7 +246,7 @@ export function RelatorioOrcamentos() {
                                                     R$ {grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                 </span>
                                             </td>
-                                            <td></td>
+                                            <td className="no-print"></td>
                                         </tr>
                                     </tfoot>
                                 </table>

@@ -4,6 +4,7 @@
  */
 
 import express from 'express';
+import mongoose from 'mongoose';
 import authRoutes from './auth.js';
 import { User } from '../models/User.js';
 import { Imovel } from '../models/Imovel.js';
@@ -394,17 +395,23 @@ router.get('/orcamentos', authenticate, requireApproved, async (req, res) => {
         if (req.query.status) query.status = req.query.status;
 
         const orcs = await Orcamento.find(query);
-        res.json(orcs.map(o => ({
-            id: o._id,
-            dependencia_id: o.dependencia_id,
-            tipo_obra_id: o.tipo_obra_id,
-            fornecedor_id: o.fornecedor_id,
-            descricao: o.descricao,
-            valor: o.valor,
-            status: o.status,
-            created_at: o.created_at,
-            updated_at: o.updated_at,
-        })));
+        res.json(orcs.map(o => {
+            const obj = o.toObject();
+            return {
+                id: obj._id,
+                dependencia_id: obj.dependencia_id,
+                tipo_obra_id: obj.tipo_obra_id,
+                fornecedor_id: obj.fornecedor_id,
+                descricao: obj.descricao,
+                valor: obj.valor,
+                status: obj.status,
+                pagamento: obj.pagamento,
+                arquivo_url: obj.arquivo_url,
+                arquivo_nome: obj.arquivo_nome,
+                created_at: obj.created_at,
+                updated_at: obj.updated_at,
+            };
+        }));
     } catch (error) {
         res.status(500).json({ detail: error.message });
     }
@@ -445,6 +452,7 @@ router.post('/orcamentos', authenticate, requireApproved, upload.single('arquivo
             descricao: orc.descricao,
             valor: orc.valor,
             status: orc.status,
+            pagamento: orc.pagamento,
             arquivo_url: orc.arquivo_url,
             arquivo_nome: orc.arquivo_nome,
             created_at: orc.created_at,
@@ -490,6 +498,7 @@ router.put('/orcamentos/:id', authenticate, requireApproved, upload.single('arqu
             descricao: orc.descricao,
             valor: orc.valor,
             status: orc.status,
+            pagamento: orc.pagamento,
             arquivo_url: orc.arquivo_url,
             arquivo_nome: orc.arquivo_nome,
             created_at: orc.created_at,
@@ -608,6 +617,148 @@ router.patch('/orcamentos/:id/desaprovar', authenticate, requireApproved, async 
         res.json({
             message: 'Aprovação removida com sucesso. O orçamento voltou para o estado pendente e a tarefa foi removida do Kanban.',
             id: orc._id
+        });
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
+// Atualizar informações de pagamento de um orçamento (e seu grupo por fornecedor e estágio)
+router.patch('/orcamentos/:id/pagamento', authenticate, requireApproved, async (req, res) => {
+    try {
+        const { metodo, parcelas } = req.body;
+
+        const orc = await Orcamento.findById(req.params.id);
+        if (!orc) {
+            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+        }
+
+        if (orc.status !== 'aprovado') {
+            return res.status(400).json({ detail: 'Apenas orçamentos aprovados podem ter informações de pagamento' });
+        }
+
+        // Busca a tarefa vinculada para saber o status no Kanban
+        const tarefa = await Tarefa.findOne({ orcamento_id: orc._id });
+        const etapaInicial = !tarefa || tarefa.status === 'orcamento';
+
+        const pagamentoData = {
+            metodo,
+            parcelas: parcelas.map(p => ({
+                data_pagamento: new Date(p.data_pagamento),
+                valor: Number(p.valor),
+                pago: Boolean(p.pago)
+            }))
+        };
+
+
+        // Identifica todos os orçamentos do mesmo fornecedor
+        const orcamentosFornecedor = await Orcamento.find({
+            fornecedor_id: orc.fornecedor_id,
+            status: 'aprovado'
+        });
+
+        // Filtra os IDs que estão na mesma etapa (inicial vs avançada)
+        const idsParaAtualizar = [];
+        for (const o of orcamentosFornecedor) {
+            const t = await Tarefa.findOne({ orcamento_id: o._id });
+            const e = !t || t.status === 'orcamento';
+            if (e === etapaInicial) {
+                idsParaAtualizar.push(o._id);
+            }
+        }
+
+        await Orcamento.updateMany(
+            { _id: { $in: idsParaAtualizar } },
+            {
+                $set: {
+                    pagamento: pagamentoData,
+                    updated_at: new Date()
+                }
+            }
+        );
+
+        res.json({
+            message: 'Informações de pagamento do grupo atualizadas com sucesso',
+            pagamento: pagamentoData,
+            itens_atualizados: idsParaAtualizar.length
+        });
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
+// Obter o total acumulado do grupo de pagamento (mesmo fornecedor e estágio)
+router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (req, res) => {
+    try {
+        const orc = await Orcamento.findById(req.params.id);
+        if (!orc) {
+            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+        }
+
+        // Identifica a etapa do orçamento atual
+        const tarefaAtual = await Tarefa.findOne({ orcamento_id: orc._id });
+        const etapaInicialAtual = !tarefaAtual || tarefaAtual.status === 'orcamento';
+
+        // Busca todos os aprovados do fornecedor
+        const orcamentosFornecedor = await Orcamento.find({
+            fornecedor_id: orc.fornecedor_id,
+            status: 'aprovado'
+        });
+
+        let total = 0;
+        let contagem = 0;
+
+        for (const o of orcamentosFornecedor) {
+            const t = await Tarefa.findOne({ orcamento_id: o._id });
+            const e = !t || t.status === 'orcamento';
+            if (e === etapaInicialAtual) {
+                total += o.valor;
+                contagem++;
+            }
+        }
+
+        res.json({
+            orcamento_id: orc.id,
+            total_grupo: total,
+            quantidade_itens: contagem,
+            etapa: etapaInicialAtual ? 'inicial' : 'avancada'
+        });
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
+// Obter o total acumulado do grupo de pagamento (mesmo fornecedor e item)
+router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (req, res) => {
+    try {
+        const orc = await Orcamento.findById(req.params.id);
+        if (!orc) {
+            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+        }
+
+        const grupo = await Orcamento.aggregate([
+            {
+                $match: {
+                    fornecedor_id: orc.fornecedor_id,
+                    tipo_obra_id: orc.tipo_obra_id,
+                    status: 'aprovado'
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$valor" },
+                    contagem: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const result = grupo.length > 0 ? grupo[0] : { total: 0, contagem: 0 };
+
+        res.json({
+            orcamento_id: orc.id,
+            total_grupo: result.total,
+            quantidade_itens: result.contagem
         });
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -772,8 +923,11 @@ router.post('/tarefas/sync', authenticate, requireApproved, async (req, res) => 
 // Relatório de orçamentos aprovados agrupados por fornecedor
 router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved, async (req, res) => {
     try {
-        const result = await Orcamento.aggregate([
-            { $match: { status: 'aprovado' } },
+        const { imovel_id } = req.query;
+        const matchStage = { status: 'aprovado' };
+
+        const pipeline = [
+            { $match: matchStage },
             {
                 $lookup: {
                     from: 'fornecedors',
@@ -792,6 +946,20 @@ router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved
                 }
             },
             { $unwind: '$dependencia' },
+            // Filtro por imóvel (após o lookup da dependência)
+            ...(imovel_id ? [{ $match: { 'dependencia.imovel_id': new mongoose.Types.ObjectId(imovel_id) } }] : []),
+            // Join com Tarefas para verificar o status no Kanban
+            {
+                $lookup: {
+                    from: 'tarefas',
+                    localField: '_id',
+                    foreignField: 'orcamento_id',
+                    as: 'tarefa'
+                }
+            },
+            { $unwind: '$tarefa' },
+            // Manter apenas orçamentos que ainda estão na coluna "Orçamento" (não iniciados)
+            { $match: { 'tarefa.status': 'orcamento' } },
             {
                 $lookup: {
                     from: 'tipoobras',
@@ -819,10 +987,12 @@ router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved
                 }
             },
             { $sort: { fornecedor_nome: 1 } }
-        ]);
+        ];
 
+        const result = await Orcamento.aggregate(pipeline);
         res.json(result);
     } catch (error) {
+        console.error('Erro no relatório por fornecedor:', error);
         res.status(500).json({ detail: error.message });
     }
 });
@@ -854,6 +1024,21 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
             { $group: { _id: '$status', count: { $sum: 1 } } }
         ]);
 
+        // Agregação de parcelas de pagamento
+        const parcelasStats = await Orcamento.aggregate([
+            { $match: { 'pagamento.parcelas': { $exists: true, $not: { $size: 0 } } } },
+            { $unwind: '$pagamento.parcelas' },
+            {
+                $group: {
+                    _id: '$pagamento.parcelas.pago',
+                    total: { $sum: '$pagamento.parcelas.valor' }
+                }
+            }
+        ]);
+
+        const valorPago = parcelasStats.find(p => p._id === true)?.total || 0;
+        const valorPendente = parcelasStats.find(p => p._id === false)?.total || 0;
+
         res.json({
             totais: {
                 total_imoveis: totalImoveis,
@@ -862,6 +1047,8 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
                 total_tarefas: totalTarefas,
                 valor_total_orcamentos: valorTotal[0]?.total || 0,
                 valor_total_aprovado: valorAprovado[0]?.total || 0,
+                valor_pago: valorPago,
+                valor_pendente: valorPendente,
             },
             orcamentos_por_status: orcsPorStatus.map(o => ({
                 status: o._id,

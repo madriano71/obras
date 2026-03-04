@@ -50,6 +50,18 @@ const orcamentoSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    pagamento: {
+        metodo: {
+            type: String,
+            enum: ['pix', 'cartao'],
+            default: null
+        },
+        parcelas: [{
+            data_pagamento: { type: Date, required: true },
+            valor: { type: Number, required: true },
+            pago: { type: Boolean, default: false }
+        }]
+    }
 });
 
 orcamentoSchema.index({ dependencia_id: 1 });
