@@ -202,7 +202,7 @@ export function RelatorioOrcamentos() {
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Qtd</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Unitário</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right no-print">Total</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Total</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center no-print">Doc</th>
                                         </tr>
                                     </thead>
@@ -228,7 +228,7 @@ export function RelatorioOrcamentos() {
                                                         {orc.valor_unitario > 0 ? `R$ ${orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right no-print">
+                                                <td className="px-6 py-4 text-right">
                                                     <span className="text-sm font-black text-slate-900">
                                                         R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                     </span>
