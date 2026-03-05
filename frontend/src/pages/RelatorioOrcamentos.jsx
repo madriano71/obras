@@ -82,6 +82,20 @@ export function RelatorioOrcamentos() {
                         margin-bottom: 2rem !important;
                         page-break-inside: avoid;
                     }
+                    table {
+                        width: 100% !important;
+                        table-layout: fixed !important;
+                    }
+                    th, td {
+                        word-break: break-word !important;
+                    }
+                    th:nth-child(1), td:nth-child(1) { width: 25% !important; }
+                    th:nth-child(2), td:nth-child(2) { width: 30% !important; }
+                    th:nth-child(3), td:nth-child(3) { width: 10% !important; }
+                    th:nth-child(4), td:nth-child(4) { width: 15% !important; }
+                    th:nth-child(5), td:nth-child(5) { width: 15% !important; }
+                    th:nth-child(6), td:nth-child(6) { display: none !important; }
+                    
                     .bg-slate-900 {
                         background-color: #0f172a !important;
                         -webkit-print-color-adjust: exact;
@@ -219,17 +233,17 @@ export function RelatorioOrcamentos() {
                                                     <p className="text-xs text-slate-500 italic max-w-xs">{orc.descricao}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className="text-sm font-medium text-slate-600">
+                                                    <span className="text-sm font-bold text-slate-800">
                                                         {orc.quantidade || '-'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <span className="text-sm font-medium text-slate-600">
+                                                    <span className="text-sm font-bold text-slate-800">
                                                         {orc.valor_unitario > 0 ? `R$ ${orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <span className="text-sm font-black text-slate-900">
+                                                    <span className="text-sm font-black text-blue-700">
                                                         R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 </td>
