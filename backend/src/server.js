@@ -31,9 +31,10 @@ const corsOptions = {
         console.log(`CORS Allowed: ${JSON.stringify(allowedOrigins)}`);
 
         if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+            console.log(`✅ CORS Aprovado para: ${origin}`);
             callback(null, true);
         } else {
-            console.error(`CORS Bloqueado para a origem: ${origin}`);
+            console.error(`❌ CORS Bloqueado! Origem: ${origin}. Permitidas: ${JSON.stringify(allowedOrigins)}`);
             callback(null, false);
         }
     },
@@ -66,11 +67,21 @@ app.get('/', (req, res) => {
     });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'healthy',
+// Health check aprimorado
+app.get('/health', async (req, res) => {
+    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    const redisStatus = redisClient && redisClient.isOpen ? 'connected' : (useMemory ? 'memory_fallback' : 'disconnected');
+
+    const isHealthy = mongoStatus === 'connected'; // Redis em memória é aceitável para o sistema rodar
+
+    res.status(isHealthy ? 200 : 503).json({
+        status: isHealthy ? 'healthy' : 'unhealthy',
+        services: {
+            mongodb: mongoStatus,
+            redis: redisStatus
+        },
         timestamp: Date.now(),
+        env: config.nodeEnv
     });
 });
 

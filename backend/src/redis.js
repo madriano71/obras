@@ -96,15 +96,22 @@ export async function registerAttempt(identifier) {
     }
 
     try {
-        const attempts = await redisClient.incr(key);
-        if (attempts === 1) {
-            const expireSeconds = config.loginBlockDurationMinutes * 60;
-            await redisClient.expire(key, expireSeconds);
-        }
+        // Timeout de segurança para operação no Redis (2 segundos)
+        const attempts = await Promise.race([
+            (async () => {
+                const count = await redisClient.incr(key);
+                if (count === 1) {
+                    const expireSeconds = config.loginBlockDurationMinutes * 60;
+                    await redisClient.expire(key, expireSeconds);
+                }
+                return count;
+            })(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Redis Timeout')), 2000))
+        ]);
         return attempts;
     } catch (error) {
-        console.error('Erro Redis registerAttempt:', error.message);
-        useMemory = true; // Força memória nas próximas chamadas
+        console.error('Erro Redis registerAttempt (ativando modo memória):', error.message);
+        useMemory = true;
         return registerAttempt(identifier);
     }
 }
@@ -133,14 +140,19 @@ export async function checkBlocked(identifier) {
     }
 
     try {
-        const attempts = await redisClient.get(key);
+        // Timeout de segurança para operação no Redis (2 segundos)
+        const attempts = await Promise.race([
+            redisClient.get(key),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Redis Timeout')), 2000))
+        ]);
+
         if (!attempts) return false;
         const attemptsCount = parseInt(attempts);
         return attemptsCount >= config.loginAttemptsLimit;
     } catch (error) {
-        console.error('Erro Redis checkBlocked:', error.message);
-        // Não throw, retorna false para não impedir login se Redis falhar
-        return false;
+        console.error('Erro Redis checkBlocked (ativando modo memória):', error.message);
+        useMemory = true;
+        return checkBlocked(identifier);
     }
 }
 
