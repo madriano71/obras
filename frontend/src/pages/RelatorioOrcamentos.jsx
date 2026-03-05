@@ -200,7 +200,9 @@ export function RelatorioOrcamentos() {
                                         <tr className="bg-slate-50/80 border-b border-slate-100">
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Dependência / Item</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Valor</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Qtd</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Unitário</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Total</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center no-print">Doc</th>
                                         </tr>
                                     </thead>
@@ -216,17 +218,20 @@ export function RelatorioOrcamentos() {
                                                 <td className="px-6 py-4">
                                                     <p className="text-xs text-slate-500 italic max-w-xs">{orc.descricao}</p>
                                                 </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="text-sm font-medium text-slate-600">
+                                                        {orc.quantidade || '-'}
+                                                    </span>
+                                                </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-sm font-black text-slate-900">
-                                                            R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                        {orc.quantidade > 0 && orc.valor_unitario > 0 && (
-                                                            <span className="text-[10px] text-slate-400 font-bold">
-                                                                {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-600">
+                                                        {orc.valor_unitario > 0 ? `R$ ${orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <span className="text-sm font-black text-slate-900">
+                                                        R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                    </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center no-print">
                                                     {orc.arquivo_url ? (
@@ -245,7 +250,7 @@ export function RelatorioOrcamentos() {
                                     </tbody>
                                     <tfoot>
                                         <tr className="bg-slate-50/30">
-                                            <td colSpan="2" className="px-6 py-4 text-right font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                                            <td colSpan="4" className="px-6 py-4 text-right font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                                 Total Fornecedor
                                             </td>
                                             <td className="px-6 py-4 text-right">
