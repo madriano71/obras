@@ -206,7 +206,7 @@ export function RelatorioOrcamentos() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="px-4 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-xl no-print">
+                                <div className="px-4 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
                                     <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block leading-none mb-0.5 text-center">Subtotal Fornecedor</span>
                                     <span className="text-lg font-black text-emerald-400 tracking-tighter whitespace-nowrap">
                                         R$ {grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -269,7 +269,7 @@ export function RelatorioOrcamentos() {
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot className="no-print">
+                                    <footer>
                                         <tr className="bg-slate-50/30">
                                             <td colSpan="4" className="px-6 py-4 text-right font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                                 Total Fornecedor
