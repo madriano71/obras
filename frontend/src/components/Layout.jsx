@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
     LogOut, Home, Building2, Users, Kanban,
-    Layers, Wrench, Receipt, ShoppingCart, Menu, X
+    Layers, Wrench, Receipt, ShoppingCart, Menu, X, Shield
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
