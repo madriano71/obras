@@ -9,7 +9,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { config } from './config.js';
 import { connectToMongo, closeMongo } from './database.js';
-import { connectToRedis, closeRedis } from './redis.js';
+import { connectToRedis, closeRedis, redisClient, useMemory } from './redis.js';
 import { User } from './models/User.js';
 import { hashPassword } from './utils/auth.js';
 import routes from './routes/index.js';

@@ -214,4 +214,4 @@ export async function getAttemptsCount(identifier) {
     }
 }
 
-export { redisClient };
+export { redisClient, useMemory };
