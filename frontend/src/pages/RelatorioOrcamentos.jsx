@@ -85,15 +85,21 @@ export function RelatorioOrcamentos() {
                     table {
                         width: 100% !important;
                         table-layout: fixed !important;
+                        border-spacing: 0 !important;
                     }
                     th, td {
                         word-break: break-word !important;
+                        padding: 8px 4px !important;
+                        font-size: 8pt !important;
                     }
-                    th:nth-child(1), td:nth-child(1) { width: 25% !important; }
-                    th:nth-child(2), td:nth-child(2) { width: 30% !important; }
-                    th:nth-child(3), td:nth-child(3) { width: 10% !important; }
-                    th:nth-child(4), td:nth-child(4) { width: 15% !important; }
-                    th:nth-child(5), td:nth-child(5) { width: 15% !important; }
+                    th {
+                        font-size: 7pt !important;
+                    }
+                    th:nth-child(1), td:nth-child(1) { width: 20% !important; }
+                    th:nth-child(2), td:nth-child(2) { width: 35% !important; }
+                    th:nth-child(3), td:nth-child(3) { width: 8% !important; }
+                    th:nth-child(4), td:nth-child(4) { width: 17% !important; }
+                    th:nth-child(5), td:nth-child(5) { width: 20% !important; }
                     th:nth-child(6), td:nth-child(6) { display: none !important; }
                     
                     .bg-slate-900 {
