@@ -269,7 +269,7 @@ export function RelatorioOrcamentos() {
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <footer>
+                                    <tfoot>
                                         <tr className="bg-slate-50/30">
                                             <td colSpan="4" className="px-6 py-4 text-right font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                                 Total Fornecedor
