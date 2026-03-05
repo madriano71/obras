@@ -221,9 +221,11 @@ export function RelatorioOrcamentos() {
                                                         <span className="text-sm font-black text-slate-900">
                                                             R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                         </span>
-                                                        <span className="text-[10px] text-slate-400 font-bold">
-                                                            {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                        </span>
+                                                        {orc.quantidade > 0 && orc.valor_unitario > 0 && (
+                                                            <span className="text-[10px] text-slate-400 font-bold">
+                                                                {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center no-print">

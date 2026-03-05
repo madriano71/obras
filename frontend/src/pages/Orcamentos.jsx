@@ -356,11 +356,13 @@ export function Orcamentos() {
                                                             {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded leading-none">
-                                                            {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    </div>
+                                                    {orc.quantidade > 0 && orc.valor_unitario > 0 && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded leading-none">
+                                                                {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                                                         <p className="text-xs text-slate-600 font-medium italic line-clamp-3">
                                                             "{orc.descricao}"
@@ -457,9 +459,11 @@ export function Orcamentos() {
                                                             <div className="flex flex-col">
                                                                 <span className="font-bold text-slate-700">{dep?.descricao || dep?.nome}</span>
                                                                 <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{item?.nome}</span>
-                                                                <span className="text-[10px] text-blue-500 font-bold mt-0.5">
-                                                                    {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                                </span>
+                                                                {orc.quantidade > 0 && orc.valor_unitario > 0 && (
+                                                                    <span className="text-[10px] text-blue-500 font-bold mt-0.5">
+                                                                        {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <span className="font-black text-slate-900 whitespace-nowrap ml-4">
                                                                 R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
