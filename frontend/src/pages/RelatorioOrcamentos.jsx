@@ -80,7 +80,8 @@ export function RelatorioOrcamentos() {
                         box-shadow: none !important;
                         border: 1px solid #e2e8f0 !important;
                         margin-bottom: 2rem !important;
-                        page-break-inside: avoid;
+                        page-break-after: always !important;
+                        break-after: page !important;
                     }
                     table {
                         width: 100% !important;
