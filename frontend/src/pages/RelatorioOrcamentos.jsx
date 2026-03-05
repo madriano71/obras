@@ -121,7 +121,7 @@ export function RelatorioOrcamentos() {
                         <Download size={18} />
                         <span>Exportar PDF</span>
                     </button>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 no-print">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Investimento Total Aprovado</span>
                         <div className="bg-slate-900 text-white px-6 py-2 rounded-2xl text-2xl font-black shadow-xl whitespace-nowrap">
                             R$ {valorTotalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -185,7 +185,7 @@ export function RelatorioOrcamentos() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="px-4 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
+                                <div className="px-4 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-xl no-print">
                                     <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block leading-none mb-0.5 text-center">Subtotal Fornecedor</span>
                                     <span className="text-lg font-black text-emerald-400 tracking-tighter whitespace-nowrap">
                                         R$ {grupo.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -202,7 +202,7 @@ export function RelatorioOrcamentos() {
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Qtd</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Unitário</th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Total</th>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right no-print">Total</th>
                                             <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center no-print">Doc</th>
                                         </tr>
                                     </thead>
@@ -228,7 +228,7 @@ export function RelatorioOrcamentos() {
                                                         {orc.valor_unitario > 0 ? `R$ ${orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-6 py-4 text-right no-print">
                                                     <span className="text-sm font-black text-slate-900">
                                                         R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                                     </span>
@@ -248,7 +248,7 @@ export function RelatorioOrcamentos() {
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot>
+                                    <tfoot className="no-print">
                                         <tr className="bg-slate-50/30">
                                             <td colSpan="4" className="px-6 py-4 text-right font-black text-slate-400 text-[10px] uppercase tracking-widest">
                                                 Total Fornecedor
