@@ -71,6 +71,11 @@ const orcamentoSchema = new mongoose.Schema({
             valor: { type: Number, required: true },
             pago: { type: Boolean, default: false }
         }]
+    },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
     }
 });
 

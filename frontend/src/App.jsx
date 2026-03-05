@@ -18,6 +18,7 @@ import { Fornecedores } from './pages/Fornecedores';
 import { Orcamentos } from './pages/Orcamentos';
 import { Produtos } from './pages/Produtos';
 import { RelatorioOrcamentos } from './pages/RelatorioOrcamentos';
+import Admin from './pages/Admin';
 
 function App() {
     return (
@@ -43,6 +44,7 @@ function App() {
                         <Route path="orcamentos" element={<Orcamentos />} />
                         <Route path="relatorio-orcamentos" element={<RelatorioOrcamentos />} />
                         <Route path="produtos" element={<Produtos />} />
+                        <Route path="admin" element={<Admin />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/" replace />} />

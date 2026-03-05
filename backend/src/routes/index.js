@@ -40,7 +40,7 @@ router.get('/users', authenticate, requireApproved, requireAdmin, async (req, re
 
 router.post('/users', authenticate, requireApproved, requireAdmin, async (req, res) => {
     try {
-        const { email, name, password } = req.body;
+        const { email, name, password, is_admin, is_approved } = req.body;
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ detail: 'Email já cadastrado' });
@@ -49,6 +49,8 @@ router.post('/users', authenticate, requireApproved, requireAdmin, async (req, r
             email: email.toLowerCase(),
             name,
             password_hash: await hashPassword(password),
+            is_admin: is_admin || false,
+            is_approved: is_approved || false
         });
         res.status(201).json({
             id: user._id,
@@ -63,10 +65,48 @@ router.post('/users', authenticate, requireApproved, requireAdmin, async (req, r
     }
 });
 
+router.put('/users/:id', authenticate, requireApproved, requireAdmin, async (req, res) => {
+    try {
+        const { name, is_admin, is_approved, password } = req.body;
+        const updateData = { name, is_admin, is_approved };
+
+        if (password) {
+            updateData.password_hash = await hashPassword(password);
+        }
+
+        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        if (!user) {
+            return res.status(404).json({ detail: 'Usuário não encontrado' });
+        }
+        res.json({
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            is_admin: user.is_admin,
+            is_approved: user.is_approved,
+            created_at: user.created_at,
+        });
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
+router.delete('/users/:id', authenticate, requireApproved, requireAdmin, async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ detail: 'Usuário não encontrado' });
+        }
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ detail: error.message });
+    }
+});
+
 // ===== IMOVEIS =====
 router.get('/imoveis', authenticate, requireApproved, async (req, res) => {
     try {
-        const imoveis = await Imovel.find();
+        const imoveis = await Imovel.find({ created_by: req.user._id });
         res.json(imoveis.map(i => ({
             id: i._id,
             tipo: i.tipo,
@@ -93,6 +133,7 @@ router.post('/imoveis', authenticate, requireApproved, async (req, res) => {
             imovel_id: imovel._id,
             nome: 'Produtos e Eletros',
             descricao: 'Cômodo geral para eletrodomésticos, móveis e eletrônicos',
+            created_by: req.user._id,
         });
 
         res.status(201).json({
@@ -111,13 +152,13 @@ router.post('/imoveis', authenticate, requireApproved, async (req, res) => {
 
 router.put('/imoveis/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        const imovel = await Imovel.findByIdAndUpdate(
-            req.params.id,
+        const imovel = await Imovel.findOneAndUpdate(
+            { _id: req.params.id, created_by: req.user._id },
             { ...req.body, updated_at: new Date() },
             { new: true, runValidators: true }
         );
         if (!imovel) {
-            return res.status(404).json({ detail: 'Imóvel não encontrado' });
+            return res.status(404).json({ detail: 'Imóvel não encontrado ou sem permissão' });
         }
         res.json({
             id: imovel._id,
@@ -135,7 +176,10 @@ router.put('/imoveis/:id', authenticate, requireApproved, async (req, res) => {
 
 router.delete('/imoveis/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        await Imovel.findByIdAndDelete(req.params.id);
+        const imovel = await Imovel.findOneAndDelete({ _id: req.params.id, created_by: req.user._id });
+        if (!imovel) {
+            return res.status(404).json({ detail: 'Imóvel não encontrado ou sem permissão' });
+        }
         await Dependencia.deleteMany({ imovel_id: req.params.id });
         res.status(204).send();
     } catch (error) {
@@ -146,7 +190,8 @@ router.delete('/imoveis/:id', authenticate, requireApproved, async (req, res) =>
 // ===== DEPENDENCIAS =====
 router.get('/dependencias', authenticate, requireApproved, async (req, res) => {
     try {
-        const query = req.query.imovel_id ? { imovel_id: req.query.imovel_id } : {};
+        const query = { created_by: req.user._id };
+        if (req.query.imovel_id) query.imovel_id = req.query.imovel_id;
         const deps = await Dependencia.find(query);
         res.json(deps.map(d => ({
             id: d._id,
@@ -163,7 +208,10 @@ router.get('/dependencias', authenticate, requireApproved, async (req, res) => {
 
 router.post('/dependencias', authenticate, requireApproved, async (req, res) => {
     try {
-        const dep = await Dependencia.create(req.body);
+        const dep = await Dependencia.create({
+            ...req.body,
+            created_by: req.user._id
+        });
         res.status(201).json({
             id: dep._id,
             imovel_id: dep.imovel_id,
@@ -179,13 +227,13 @@ router.post('/dependencias', authenticate, requireApproved, async (req, res) => 
 
 router.put('/dependencias/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        const dep = await Dependencia.findByIdAndUpdate(
-            req.params.id,
+        const dep = await Dependencia.findOneAndUpdate(
+            { _id: req.params.id, created_by: req.user._id },
             req.body,
             { new: true, runValidators: true }
         );
         if (!dep) {
-            return res.status(404).json({ detail: 'Dependência não encontrada' });
+            return res.status(404).json({ detail: 'Dependência não encontrada ou sem permissão' });
         }
         res.json({
             id: dep._id,
@@ -202,7 +250,10 @@ router.put('/dependencias/:id', authenticate, requireApproved, async (req, res) 
 
 router.delete('/dependencias/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        await Dependencia.findByIdAndDelete(req.params.id);
+        const dep = await Dependencia.findOneAndDelete({ _id: req.params.id, created_by: req.user._id });
+        if (!dep) {
+            return res.status(404).json({ detail: 'Dependência não encontrada ou sem permissão' });
+        }
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -263,7 +314,10 @@ router.get('/tipos-obra', authenticate, requireApproved, async (req, res) => {
 
 router.post('/tipos-obra', authenticate, requireApproved, async (req, res) => {
     try {
-        const tipo = await TipoObra.create(req.body);
+        const tipo = await TipoObra.create({
+            ...req.body,
+            created_by: req.user._id
+        });
         res.status(201).json({
             id: tipo._id,
             nome: tipo.nome,
@@ -304,7 +358,10 @@ router.put('/tipos-obra/:id', authenticate, requireApproved, async (req, res) =>
 
 router.delete('/tipos-obra/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        await TipoObra.findByIdAndDelete(req.params.id);
+        const tipo = await TipoObra.findOneAndDelete({ _id: req.params.id, created_by: req.user._id });
+        if (!tipo) {
+            return res.status(404).json({ detail: 'Tipo de obra não encontrado ou sem permissão' });
+        }
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -314,7 +371,7 @@ router.delete('/tipos-obra/:id', authenticate, requireApproved, async (req, res)
 // ===== FORNECEDORES =====
 router.get('/fornecedores', authenticate, requireApproved, async (req, res) => {
     try {
-        const fornecedores = await Fornecedor.find();
+        const fornecedores = await Fornecedor.find({ created_by: req.user._id });
         res.json(fornecedores.map(f => ({
             id: f._id,
             nome: f.nome,
@@ -333,7 +390,10 @@ router.get('/fornecedores', authenticate, requireApproved, async (req, res) => {
 
 router.post('/fornecedores', authenticate, requireApproved, async (req, res) => {
     try {
-        const forn = await Fornecedor.create(req.body);
+        const forn = await Fornecedor.create({
+            ...req.body,
+            created_by: req.user._id
+        });
         res.status(201).json({
             id: forn._id,
             nome: forn.nome,
@@ -352,13 +412,13 @@ router.post('/fornecedores', authenticate, requireApproved, async (req, res) => 
 
 router.put('/fornecedores/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        const forn = await Fornecedor.findByIdAndUpdate(
-            req.params.id,
+        const forn = await Fornecedor.findOneAndUpdate(
+            { _id: req.params.id, created_by: req.user._id },
             req.body,
             { new: true, runValidators: true }
         );
         if (!forn) {
-            return res.status(404).json({ detail: 'Fornecedor não encontrado' });
+            return res.status(404).json({ detail: 'Fornecedor não encontrado ou sem permissão' });
         }
         res.json({
             id: forn._id,
@@ -378,7 +438,10 @@ router.put('/fornecedores/:id', authenticate, requireApproved, async (req, res) 
 
 router.delete('/fornecedores/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        await Fornecedor.findByIdAndDelete(req.params.id);
+        const forn = await Fornecedor.findOneAndDelete({ _id: req.params.id, created_by: req.user._id });
+        if (!forn) {
+            return res.status(404).json({ detail: 'Fornecedor não encontrado ou sem permissão' });
+        }
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -388,7 +451,7 @@ router.delete('/fornecedores/:id', authenticate, requireApproved, async (req, re
 // ===== ORCAMENTOS =====
 router.get('/orcamentos', authenticate, requireApproved, async (req, res) => {
     try {
-        const query = {};
+        const query = { created_by: req.user._id };
         if (req.query.dependencia_id) query.dependencia_id = req.query.dependencia_id;
         if (req.query.tipo_obra_id) query.tipo_obra_id = req.query.tipo_obra_id;
         if (req.query.fornecedor_id) query.fornecedor_id = req.query.fornecedor_id;
@@ -450,7 +513,10 @@ router.post('/orcamentos', authenticate, requireApproved, upload.single('arquivo
             orcData.arquivo_nome = req.file.originalname;
         }
 
-        const orc = await Orcamento.create(orcData);
+        const orc = await Orcamento.create({
+            ...orcData,
+            created_by: req.user._id
+        });
         res.status(201).json({
             id: orc._id,
             dependencia_id: orc.dependencia_id,
@@ -496,13 +562,13 @@ router.put('/orcamentos/:id', authenticate, requireApproved, upload.single('arqu
             updateData.arquivo_nome = req.file.originalname;
         }
 
-        const orc = await Orcamento.findByIdAndUpdate(
-            req.params.id,
+        const orc = await Orcamento.findOneAndUpdate(
+            { _id: req.params.id, created_by: req.user._id },
             updateData,
             { new: true, runValidators: true }
         );
         if (!orc) {
-            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+            return res.status(404).json({ detail: 'Orçamento não encontrado ou sem permissão' });
         }
         res.json({
             id: orc._id,
@@ -527,7 +593,10 @@ router.put('/orcamentos/:id', authenticate, requireApproved, upload.single('arqu
 
 router.delete('/orcamentos/:id', authenticate, requireApproved, async (req, res) => {
     try {
-        await Orcamento.findByIdAndDelete(req.params.id);
+        const orc = await Orcamento.findOneAndDelete({ _id: req.params.id, created_by: req.user._id });
+        if (!orc) {
+            return res.status(404).json({ detail: 'Orçamento não encontrado ou sem permissão' });
+        }
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ detail: error.message });
@@ -962,8 +1031,13 @@ router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved
                 }
             },
             { $unwind: '$dependencia' },
-            // Filtro por imóvel (após o lookup da dependência)
-            ...(imovel_id ? [{ $match: { 'dependencia.imovel_id': new mongoose.Types.ObjectId(imovel_id) } }] : []),
+            // Filtro por imóvel e proprietário
+            {
+                $match: {
+                    'dependencia.imovel_id': new mongoose.Types.ObjectId(imovel_id),
+                    'created_by': req.user._id
+                }
+            },
             // Join com Tarefas para verificar o status no Kanban
             {
                 $lookup: {

@@ -21,6 +21,11 @@ const tipoObraSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    }
 });
 
 export const TipoObra = mongoose.model('TipoObra', tipoObraSchema);

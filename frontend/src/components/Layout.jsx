@@ -30,7 +30,7 @@ export function Layout() {
     ];
 
     if (user?.is_admin) {
-        navigation.push({ name: 'Usuários', href: '/users', icon: Users });
+        navigation.push({ name: 'Administração', href: '/admin', icon: Shield });
     }
 
     return (

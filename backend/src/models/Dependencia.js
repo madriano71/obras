@@ -23,6 +23,11 @@ const dependenciaSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    }
 });
 
 dependenciaSchema.index({ imovel_id: 1 });
