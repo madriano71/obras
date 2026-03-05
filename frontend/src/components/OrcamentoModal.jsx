@@ -14,6 +14,8 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
         tipo_obra_id: '',
         fornecedor_id: '',
         descricao: '',
+        quantidade: '',
+        valor_unitario: '',
         valor: '',
         status: 'pendente'
     });
@@ -36,6 +38,8 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                 tipo_obra_id: orcamento.tipo_obra_id || '',
                 fornecedor_id: orcamento.fornecedor_id || '',
                 descricao: orcamento.descricao || '',
+                quantidade: orcamento.quantidade || '',
+                valor_unitario: orcamento.valor_unitario || '',
                 valor: orcamento.valor || '',
                 status: orcamento.status || 'pendente'
             });
@@ -51,6 +55,8 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                 tipo_obra_id: '',
                 fornecedor_id: '',
                 descricao: '',
+                quantidade: '',
+                valor_unitario: '',
                 valor: '',
                 status: 'pendente'
             });
@@ -58,10 +64,21 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
         }
     }, [orcamento, isOpen, dependencias]);
 
+    // Efeito para calcular o valor total automaticamente
+    useEffect(() => {
+        const qty = parseFloat(formData.quantidade) || 0;
+        const unit = parseFloat(formData.valor_unitario) || 0;
+        const total = (qty * unit).toFixed(2);
+
+        setFormData(prev => ({
+            ...prev,
+            valor: total > 0 ? total : prev.valor
+        }));
+    }, [formData.quantidade, formData.valor_unitario]);
     function handleChange(e) {
         const { name, value } = e.target;
 
-        if (name === 'valor') {
+        if (name === 'valor_unitario') {
             // Remove tudo que não é número
             const cleanValue = value.replace(/\D/g, '');
             // Converte para decimal (centavos)
@@ -69,6 +86,20 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
             setFormData(prev => ({
                 ...prev,
                 [name]: decimalValue,
+            }));
+            return;
+        }
+
+        if (name === 'quantidade') {
+            // Permite apenas números e um ponto decimal
+            const cleanValue = value.replace(/[^0-9.]/g, '');
+            // Evita múltiplos pontos decimais
+            const parts = cleanValue.split('.');
+            const formattedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleanValue;
+
+            setFormData(prev => ({
+                ...prev,
+                [name]: formattedValue,
             }));
             return;
         }
@@ -105,6 +136,8 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
             data.append('tipo_obra_id', formData.tipo_obra_id);
             data.append('fornecedor_id', formData.fornecedor_id);
             data.append('descricao', formData.descricao);
+            data.append('quantidade', formData.quantidade);
+            data.append('valor_unitario', formData.valor_unitario);
             data.append('valor', formData.valor);
             data.append('status', formData.status);
 
@@ -318,21 +351,56 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                                 )}
                             </div>
 
+                            <div className="grid grid-cols-2 gap-5">
+                                <div>
+                                    <label htmlFor="quantidade" className="label">Quantidade</label>
+                                    <input
+                                        id="quantidade"
+                                        name="quantidade"
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={formData.quantidade}
+                                        onChange={handleChange}
+                                        className="input"
+                                        placeholder="0.00"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="valor_unitario" className="label">Valor Unitário</label>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold transition-colors group-focus-within:text-blue-500 text-xs">R$</span>
+                                        <input
+                                            id="valor_unitario"
+                                            name="valor_unitario"
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={formatCurrencyDisplay(formData.valor_unitario)}
+                                            onChange={handleChange}
+                                            className="input pl-10 text-sm font-bold"
+                                            placeholder="0,00"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
-                                <label htmlFor="valor" className="label">Valor do Orçamento</label>
+                                <label htmlFor="valor" className="label text-blue-600">Valor Total do Orçamento</label>
                                 <div className="relative group">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold transition-colors group-focus-within:text-blue-500">R$</span>
                                     <input
                                         id="valor"
                                         name="valor"
                                         type="text"
-                                        inputMode="numeric"
                                         value={formatCurrencyDisplay(formData.valor)}
-                                        onChange={handleChange}
-                                        className="input pl-12 text-lg font-black tracking-tight"
+                                        className="input pl-12 text-lg font-black tracking-tight bg-slate-50 border-blue-100 text-blue-900"
                                         placeholder="0,00"
-                                        required
+                                        readOnly
                                     />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Calculado</span>
+                                    </div>
                                 </div>
                             </div>
 

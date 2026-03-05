@@ -24,6 +24,16 @@ const orcamentoSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    valor_unitario: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    quantidade: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
     valor: {
         type: Number,
         required: true,

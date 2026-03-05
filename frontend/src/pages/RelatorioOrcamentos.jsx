@@ -217,9 +217,14 @@ export function RelatorioOrcamentos() {
                                                     <p className="text-xs text-slate-500 italic max-w-xs">{orc.descricao}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <span className="text-sm font-black text-slate-900">
-                                                        R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                    </span>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-sm font-black text-slate-900">
+                                                            R$ {orc.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-bold">
+                                                            {orc.quantidade} x R$ {orc.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center no-print">
                                                     {orc.arquivo_url ? (

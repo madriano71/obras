@@ -403,6 +403,8 @@ router.get('/orcamentos', authenticate, requireApproved, async (req, res) => {
                 tipo_obra_id: obj.tipo_obra_id,
                 fornecedor_id: obj.fornecedor_id,
                 descricao: obj.descricao,
+                quantidade: obj.quantidade,
+                valor_unitario: obj.valor_unitario,
                 valor: obj.valor,
                 status: obj.status,
                 pagamento: obj.pagamento,
@@ -427,14 +429,19 @@ const upload = multer(uploadConfig);
 
 router.post('/orcamentos', authenticate, requireApproved, upload.single('arquivo'), async (req, res) => {
     try {
-        const { dependencia_id, tipo_obra_id, fornecedor_id, descricao, valor, status } = req.body;
+        const { dependencia_id, tipo_obra_id, fornecedor_id, descricao, valor_unitario, quantidade, status } = req.body;
+
+        // Calcula o valor total automaticamente
+        const valorCalculado = Number(valor_unitario) * Number(quantidade);
 
         const orcData = {
             dependencia_id,
             tipo_obra_id,
             fornecedor_id,
             descricao,
-            valor,
+            valor_unitario: Number(valor_unitario),
+            quantidade: Number(quantidade),
+            valor: valorCalculado,
             status,
         };
 
@@ -450,6 +457,8 @@ router.post('/orcamentos', authenticate, requireApproved, upload.single('arquivo
             tipo_obra_id: orc.tipo_obra_id,
             fornecedor_id: orc.fornecedor_id,
             descricao: orc.descricao,
+            valor_unitario: orc.valor_unitario,
+            quantidade: orc.quantidade,
             valor: orc.valor,
             status: orc.status,
             pagamento: orc.pagamento,
@@ -465,14 +474,19 @@ router.post('/orcamentos', authenticate, requireApproved, upload.single('arquivo
 
 router.put('/orcamentos/:id', authenticate, requireApproved, upload.single('arquivo'), async (req, res) => {
     try {
-        const { dependencia_id, tipo_obra_id, fornecedor_id, descricao, valor, status } = req.body;
+        const { dependencia_id, tipo_obra_id, fornecedor_id, descricao, valor_unitario, quantidade, status } = req.body;
+
+        // Calcula o valor total automaticamente
+        const valorCalculado = Number(valor_unitario) * Number(quantidade);
 
         const updateData = {
             dependencia_id,
             tipo_obra_id,
             fornecedor_id,
             descricao,
-            valor,
+            valor_unitario: Number(valor_unitario),
+            quantidade: Number(quantidade),
+            valor: valorCalculado,
             status,
             updated_at: new Date()
         };
@@ -496,6 +510,8 @@ router.put('/orcamentos/:id', authenticate, requireApproved, upload.single('arqu
             tipo_obra_id: orc.tipo_obra_id,
             fornecedor_id: orc.fornecedor_id,
             descricao: orc.descricao,
+            valor_unitario: orc.valor_unitario,
+            quantidade: orc.quantidade,
             valor: orc.valor,
             status: orc.status,
             pagamento: orc.pagamento,
@@ -979,6 +995,8 @@ router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved
                             dependencia: '$dependencia.nome',
                             item: '$item.nome',
                             descricao: '$descricao',
+                            quantidade: '$quantidade',
+                            valor_unitario: '$valor_unitario',
                             valor: '$valor',
                             arquivo_url: '$arquivo_url'
                         }
