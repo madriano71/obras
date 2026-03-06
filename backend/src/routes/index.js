@@ -616,12 +616,18 @@ router.patch('/orcamentos/:id/aprovar', authenticate, requireApproved, async (re
         orc.updated_at = new Date();
         await orc.save();
 
-        // Rejeita os outros orçamentos para a mesma dependência e tipo de obra
+        // Regra de Negócio: Se adicionar um novo orçamento com o mesmo item, 
+        // deve rejeitar os demais APENAS se eles não estiverem "Efetivados" (pagos).
+        // Isso permite recorrência (ex: vários fretes para a mesma obra).
         await Orcamento.updateMany(
             {
                 _id: { $ne: orc._id },
                 dependencia_id: orc.dependencia_id,
-                tipo_obra_id: orc.tipo_obra_id
+                tipo_obra_id: orc.tipo_obra_id,
+                created_by: req.user._id,
+                status: { $ne: 'rejeitado' },
+                // Ignora orçamentos que já tenham parcelas pagas (considerados efetivados)
+                'pagamento.parcelas.pago': { $ne: true }
             },
             { status: 'rejeitado', updated_at: new Date() }
         );
@@ -634,9 +640,9 @@ router.patch('/orcamentos/:id/aprovar', authenticate, requireApproved, async (re
 
         // Busca dados para o título da tarefa
         const [dep, item, forn] = await Promise.all([
-            Dependencia.findById(orc.dependencia_id),
+            Dependencia.findOne({ _id: orc.dependencia_id, created_by: req.user._id }),
             TipoObra.findById(orc.tipo_obra_id),
-            Fornecedor.findById(orc.fornecedor_id)
+            Fornecedor.findOne({ _id: orc.fornecedor_id, created_by: req.user._id })
         ]);
 
         // Cria nova tarefa no Kanban automaticamente
@@ -648,7 +654,7 @@ router.patch('/orcamentos/:id/aprovar', authenticate, requireApproved, async (re
             descricao: `Serviço de ${item?.nome} na ${dep?.nome} aprovado por R$ ${orc.valor.toLocaleString('pt-BR')}. Fornecedor: ${forn?.nome}.`,
             status: 'orcamento',
             prioridade: 'media',
-            created_by: req.user.id
+            created_by: req.user._id
         });
 
         await novaTarefa.save();
