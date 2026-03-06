@@ -1156,9 +1156,9 @@ router.get('/dashboard/orcamentos-por-dependencia', authenticate, requireApprove
 
         res.json(result.map(r => ({
             dependencia_id: r._id,
-            nome: r.nome,
+            name: r.nome,
             imovel_id: r.imovel_id,
-            total_orcamentos: r.total_orcamentos,
+            total: r.total_orcamentos,
             total_aprovado: r.total_aprovado,
             count: r.count,
         })));
@@ -1198,8 +1198,8 @@ router.get('/dashboard/orcamentos-por-item', authenticate, requireApproved, asyn
 
         res.json(result.map(r => ({
             id: r._id,
-            nome: r.nome,
-            total_orcamentos: r.total_orcamentos,
+            name: r.nome,
+            total: r.total_orcamentos,
             total_aprovado: r.total_aprovado,
             count: r.count,
         })));
@@ -1244,8 +1244,8 @@ router.get('/dashboard/orcamentos-por-fornecedor', authenticate, requireApproved
 
         res.json(result.map(r => ({
             id: r._id,
-            nome: r.nome,
-            total_orcamentos: r.total_orcamentos,
+            name: r.nome,
+            total: r.total_orcamentos,
             total_aprovado: r.total_aprovado,
             count_total: r.count_total,
             count_aprovado: r.count_aprovado,
