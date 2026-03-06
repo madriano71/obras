@@ -1059,32 +1059,34 @@ router.get('/orcamentos/relatorio-por-fornecedor', authenticate, requireApproved
 router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) => {
     try {
         const [totalImoveis, totalDeps, totalOrcs, totalTarefas] = await Promise.all([
-            Imovel.countDocuments(),
-            Dependencia.countDocuments(),
-            Orcamento.countDocuments(),
-            Tarefa.countDocuments(),
+            Imovel.countDocuments({ created_by: req.user._id }),
+            Dependencia.countDocuments({ created_by: req.user._id }),
+            Orcamento.countDocuments({ created_by: req.user._id }),
+            Tarefa.countDocuments({ created_by: req.user._id }),
         ]);
 
         const valorTotal = await Orcamento.aggregate([
+            { $match: { created_by: req.user._id } },
             { $group: { _id: null, total: { $sum: '$valor' } } }
         ]);
 
         const valorAprovado = await Orcamento.aggregate([
-            { $match: { status: 'aprovado' } },
+            { $match: { created_by: req.user._id, status: 'aprovado' } },
             { $group: { _id: null, total: { $sum: '$valor' } } }
         ]);
 
         const orcsPorStatus = await Orcamento.aggregate([
+            { $match: { created_by: req.user._id } },
             { $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$valor' } } }
         ]);
 
         const tarefasPorStatus = await Tarefa.aggregate([
+            { $match: { created_by: req.user._id } },
             { $group: { _id: '$status', count: { $sum: 1 } } }
         ]);
 
-        // Agregação de parcelas de pagamento
         const parcelasStats = await Orcamento.aggregate([
-            { $match: { 'pagamento.parcelas': { $exists: true, $not: { $size: 0 } } } },
+            { $match: { created_by: req.user._id, 'pagamento.parcelas': { $exists: true, $not: { $size: 0 } } } },
             { $unwind: '$pagamento.parcelas' },
             {
                 $group: {
@@ -1126,6 +1128,7 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
 router.get('/dashboard/orcamentos-por-dependencia', authenticate, requireApproved, async (req, res) => {
     try {
         const result = await Orcamento.aggregate([
+            { $match: { created_by: req.user._id } },
             {
                 $lookup: {
                     from: 'dependencias',
@@ -1167,6 +1170,7 @@ router.get('/dashboard/orcamentos-por-dependencia', authenticate, requireApprove
 router.get('/dashboard/orcamentos-por-item', authenticate, requireApproved, async (req, res) => {
     try {
         const result = await Orcamento.aggregate([
+            { $match: { created_by: req.user._id } },
             {
                 $lookup: {
                     from: 'tipoobras',
@@ -1207,6 +1211,7 @@ router.get('/dashboard/orcamentos-por-item', authenticate, requireApproved, asyn
 router.get('/dashboard/orcamentos-por-fornecedor', authenticate, requireApproved, async (req, res) => {
     try {
         const result = await Orcamento.aggregate([
+            { $match: { created_by: req.user._id } },
             {
                 $lookup: {
                     from: 'fornecedors',
