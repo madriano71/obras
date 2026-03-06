@@ -96,10 +96,7 @@ export function Login() {
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-slate-600">
-                    <p>Credenciais padrão do admin:</p>
-                    <p className="font-mono mt-1">admin@admin.com / admin123</p>
-                </div>
+
             </div>
         </div>
     );
