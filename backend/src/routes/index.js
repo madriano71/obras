@@ -711,11 +711,11 @@ router.patch('/orcamentos/:id/desaprovar', authenticate, requireApproved, async 
 // Atualizar informações de pagamento de um orçamento (e seu grupo por fornecedor e estágio)
 router.patch('/orcamentos/:id/pagamento', authenticate, requireApproved, async (req, res) => {
     try {
-        const { metodo, parcelas } = req.body;
+        const { metodo, parcelas, valor_com_desconto } = req.body;
 
-        const orc = await Orcamento.findById(req.params.id);
+        const orc = await Orcamento.findOne({ _id: req.params.id, created_by: req.user._id });
         if (!orc) {
-            return res.status(404).json({ detail: 'Orçamento não encontrado' });
+            return res.status(404).json({ detail: 'Orçamento não encontrado ou sem permissão' });
         }
 
         if (orc.status !== 'aprovado') {
@@ -740,7 +740,8 @@ router.patch('/orcamentos/:id/pagamento', authenticate, requireApproved, async (
         // Identifica todos os orçamentos do mesmo fornecedor
         const orcamentosFornecedor = await Orcamento.find({
             fornecedor_id: orc.fornecedor_id,
-            status: 'aprovado'
+            status: 'aprovado',
+            created_by: req.user._id
         });
 
         // Filtra os IDs que estão na mesma etapa (inicial vs avançada)
@@ -754,7 +755,7 @@ router.patch('/orcamentos/:id/pagamento', authenticate, requireApproved, async (
         }
 
         await Orcamento.updateMany(
-            { _id: { $in: idsParaAtualizar } },
+            { _id: { $in: idsParaAtualizar }, created_by: req.user._id },
             {
                 $set: {
                     pagamento: pagamentoData,
@@ -788,7 +789,8 @@ router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (
         // Busca todos os aprovados do fornecedor
         const orcamentosFornecedor = await Orcamento.find({
             fornecedor_id: orc.fornecedor_id,
-            status: 'aprovado'
+            status: 'aprovado',
+            created_by: req.user._id
         });
 
         let total = 0;
