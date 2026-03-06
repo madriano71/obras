@@ -28,6 +28,22 @@ export function Orcamentos() {
     const [editingOrcamento, setEditingOrcamento] = useState(null);
     const [viewMode, setViewMode] = useState('cards'); // 'cards' ou 'table'
 
+    // Formata o endereço para exibição, suportando tanto string quanto objeto
+    const formatEndereco = (endereco) => {
+        if (!endereco) return 'Endereço não informado';
+        if (typeof endereco === 'string') return endereco;
+
+        const { rua, numero, complemento, bairro, cidade, estado } = endereco;
+        const partes = [
+            rua && numero ? `${rua}, ${numero}` : rua || numero,
+            complemento,
+            bairro,
+            cidade && estado ? `${cidade} - ${estado}` : cidade || estado
+        ].filter(Boolean);
+
+        return partes.join(', ') || 'Endereço incompleto';
+    };
+
     useEffect(() => {
         loadBaseData();
     }, []);
@@ -146,8 +162,8 @@ export function Orcamentos() {
         }
     }
 
-    const currentImovelDeps = dependencias.map(d => d.id);
-    const filteredOrcamentos = orcamentos.filter(o => currentImovelDeps.includes(o.dependencia_id));
+    const currentImovelDeps = dependencias.map(d => String(d.id));
+    const filteredOrcamentos = orcamentos.filter(o => currentImovelDeps.includes(String(o.dependencia_id)));
 
     // Agrupa orçamentos por Dependência e Item para visualização comparativa
     const groupedOrcamentos = {};
@@ -236,7 +252,9 @@ export function Orcamentos() {
                             className="bg-transparent border-none p-0 text-lg font-bold text-slate-900 focus:ring-0 cursor-pointer"
                         >
                             {imoveis.map(i => (
-                                <option key={i.id} value={i.id}>{i.tipo} - {i.cliente}</option>
+                                <option key={i.id} value={i.id}>
+                                    {i.tipo} - {i.cliente} ({formatEndereco(i.endereco)})
+                                </option>
                             ))}
                         </select>
                     </div>

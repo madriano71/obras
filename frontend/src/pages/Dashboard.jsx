@@ -33,9 +33,16 @@ export function Dashboard() {
             ]);
 
             setStats(statsRes.data);
-            setOrcamentosPorDependencia(depRes.data);
-            setOrcamentosPorItem(itemRes.data);
-            setOrcamentosPorFornecedor(fornRes.data);
+
+            // Normaliza as chaves para garantir compatibilidade entre versões do backend
+            const normalize = (data) => data.map(item => ({
+                name: item.name || item.nome || 'Outro',
+                total: item.total || item.total_orcamentos || 0
+            }));
+
+            setOrcamentosPorDependencia(normalize(depRes.data));
+            setOrcamentosPorItem(normalize(itemRes.data));
+            setOrcamentosPorFornecedor(normalize(fornRes.data));
         } catch (error) {
             console.error('Erro ao carregar dashboard:', error);
         } finally {

@@ -15,6 +15,22 @@ export function Imoveis() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingImovel, setEditingImovel] = useState(null);
 
+    // Formata o endereço para exibição, suportando tanto string quanto objeto
+    const formatEndereco = (endereco) => {
+        if (!endereco) return 'Endereço não informado';
+        if (typeof endereco === 'string') return endereco;
+
+        const { rua, numero, complemento, bairro, cidade, estado } = endereco;
+        const partes = [
+            rua && numero ? `${rua}, ${numero}` : rua || numero,
+            complemento,
+            bairro,
+            cidade && estado ? `${cidade} - ${estado}` : cidade || estado
+        ].filter(Boolean);
+
+        return partes.join(', ') || 'Endereço incompleto';
+    };
+
     useEffect(() => {
         loadImoveis();
     }, []);
@@ -150,7 +166,7 @@ export function Imoveis() {
                             </div>
 
                             <div className="space-y-3 pt-6 border-t border-slate-50 text-slate-600">
-                                <p className="text-sm font-medium">{imovel.endereco}</p>
+                                <p className="text-sm font-medium">{formatEndereco(imovel.endereco)}</p>
                             </div>
 
                             <div className="mt-8 flex justify-end">
