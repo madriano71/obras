@@ -1099,11 +1099,21 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
                     'pagamento.parcelas': { $exists: true, $not: { $size: 0 } }
                 }
             },
-            { $unwind: '$pagamento.parcelas' },
+            // Agrupa pelo fornecedor e pelo conteúdo do pagamento para evitar duplicidade
+            // quando múltiplos orçamentos compartilham o mesmo objeto de pagamento.
             {
                 $group: {
-                    _id: '$pagamento.parcelas.pago',
-                    total: { $sum: '$pagamento.parcelas.valor' }
+                    _id: {
+                        fornecedor: '$fornecedor_id',
+                        pagamento: '$pagamento'
+                    }
+                }
+            },
+            { $unwind: '$_id.pagamento.parcelas' },
+            {
+                $group: {
+                    _id: '$_id.pagamento.parcelas.pago',
+                    total: { $sum: '$_id.pagamento.parcelas.valor' }
                 }
             }
         ]);
