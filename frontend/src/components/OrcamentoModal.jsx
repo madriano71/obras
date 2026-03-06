@@ -24,6 +24,7 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
     const [activeTab, setActiveTab] = useState('geral'); // 'geral' ou 'pagamento'
     const [pagamento, setPagamento] = useState({
         metodo: 'pix',
+        valor_com_desconto: '',
         parcelas: []
     });
     const [grupoTotal, setGrupoTotal] = useState({ total: 0, count: 0 });
@@ -45,6 +46,7 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
             });
             setPagamento({
                 metodo: orcamento.pagamento?.metodo || 'pix',
+                valor_com_desconto: orcamento.pagamento?.valor_com_desconto || '',
                 parcelas: orcamento.pagamento?.parcelas || []
             });
             setFile(null); // Reset file input on edit
@@ -178,6 +180,12 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                 total: response.data.total_grupo,
                 count: response.data.quantidade_itens
             });
+            if (response.data.valor_com_desconto) {
+                setPagamento(prev => ({
+                    ...prev,
+                    valor_com_desconto: response.data.valor_com_desconto
+                }));
+            }
         } catch (error) {
             console.error('Erro ao buscar total do grupo:', error);
         }
@@ -222,7 +230,7 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
     }
 
     function gerarParcelasAutomaticas(num) {
-        const valorTotal = grupoTotal.total || Number(formData.valor);
+        const valorTotal = pagamento.valor_com_desconto || grupoTotal.total || Number(formData.valor);
         const valorParcela = (valorTotal / num).toFixed(2);
         const novasParcelas = [];
 
@@ -529,6 +537,34 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                             </div>
                         </div>
 
+                        {grupoTotal.count > 1 && (
+                            <div className="p-4 rounded-2xl border bg-amber-50 border-amber-100 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="valor_com_desconto" className="text-xs font-black text-amber-900 uppercase tracking-widest">Valor Agrupado com Desconto</label>
+                                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                                        <DollarSign size={10} />
+                                        <span>Opcional</span>
+                                    </div>
+                                </div>
+                                <div className="relative group">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 font-bold transition-colors group-focus-within:text-amber-600 text-xs">R$</span>
+                                    <input
+                                        id="valor_com_desconto"
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={formatCurrencyDisplay(pagamento.valor_com_desconto)}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            const decimalVal = val ? (parseInt(val) / 100).toFixed(2) : '';
+                                            setPagamento(prev => ({ ...prev, valor_com_desconto: decimalVal }));
+                                        }}
+                                        className="w-full bg-white border-amber-200 rounded-xl py-3 pl-10 pr-4 text-sm font-black text-amber-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all placeholder:text-amber-200"
+                                        placeholder="0,00"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-amber-600 font-medium">Se preenchido, este valor será usado para calcular o parcelamento ao invés do total original.</p>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 onClick={() => setPagamento(prev => ({ ...prev, metodo: 'pix' }))}
@@ -644,7 +680,7 @@ export function OrcamentoModal({ isOpen, onClose, onSave, onUnapprove, imoveis, 
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 

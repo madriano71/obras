@@ -66,6 +66,10 @@ const orcamentoSchema = new mongoose.Schema({
             enum: ['pix', 'cartao'],
             default: null
         },
+        valor_com_desconto: {
+            type: Number,
+            default: null
+        },
         parcelas: [{
             data_pagamento: { type: Date, required: true },
             valor: { type: Number, required: true },

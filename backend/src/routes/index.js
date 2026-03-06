@@ -728,6 +728,7 @@ router.patch('/orcamentos/:id/pagamento', authenticate, requireApproved, async (
 
         const pagamentoData = {
             metodo,
+            valor_com_desconto: valor_com_desconto ? Number(valor_com_desconto) : null,
             parcelas: parcelas.map(p => ({
                 data_pagamento: new Date(p.data_pagamento),
                 valor: Number(p.valor),
@@ -805,6 +806,7 @@ router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (
         res.json({
             orcamento_id: orc.id,
             total_grupo: total,
+            valor_com_desconto: orc.pagamento?.valor_com_desconto || null,
             quantidade_itens: contagem,
             etapa: etapaInicialAtual ? 'inicial' : 'avancada'
         });
