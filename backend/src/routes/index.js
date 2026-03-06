@@ -815,42 +815,6 @@ router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (
     }
 });
 
-// Obter o total acumulado do grupo de pagamento (mesmo fornecedor e item)
-router.get('/orcamentos/:id/grupo-total', authenticate, requireApproved, async (req, res) => {
-    try {
-        const orc = await Orcamento.findById(req.params.id);
-        if (!orc) {
-            return res.status(404).json({ detail: 'Orçamento não encontrado' });
-        }
-
-        const grupo = await Orcamento.aggregate([
-            {
-                $match: {
-                    fornecedor_id: orc.fornecedor_id,
-                    tipo_obra_id: orc.tipo_obra_id,
-                    status: 'aprovado'
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: "$valor" },
-                    contagem: { $sum: 1 }
-                }
-            }
-        ]);
-
-        const result = grupo.length > 0 ? grupo[0] : { total: 0, contagem: 0 };
-
-        res.json({
-            orcamento_id: orc.id,
-            total_grupo: result.total,
-            quantidade_itens: result.contagem
-        });
-    } catch (error) {
-        res.status(500).json({ detail: error.message });
-    }
-});
 
 // ===== TAREFAS =====
 router.get('/tarefas', authenticate, requireApproved, async (req, res) => {
