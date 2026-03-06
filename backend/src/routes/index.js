@@ -616,18 +616,16 @@ router.patch('/orcamentos/:id/aprovar', authenticate, requireApproved, async (re
         orc.updated_at = new Date();
         await orc.save();
 
-        // Regra de Negócio: Se adicionar um novo orçamento com o mesmo item, 
-        // deve rejeitar os demais APENAS se eles não estiverem "Efetivados" (pagos).
-        // Isso permite recorrência (ex: vários fretes para a mesma obra).
+        // Regra de Negócio: Ao aprovar um novo orçamento, rejeita as demais 
+        // cotações APENAS se estiverem "pendentes" (concorrentes).
+        // Isso permite múltiplos ciclos aprovados/pagos (ex: vários fretes).
         await Orcamento.updateMany(
             {
                 _id: { $ne: orc._id },
                 dependencia_id: orc.dependencia_id,
                 tipo_obra_id: orc.tipo_obra_id,
                 created_by: req.user._id,
-                status: { $ne: 'rejeitado' },
-                // Ignora orçamentos que já tenham parcelas pagas (considerados efetivados)
-                'pagamento.parcelas.pago': { $ne: true }
+                status: 'pendente'
             },
             { status: 'rejeitado', updated_at: new Date() }
         );
@@ -1094,7 +1092,13 @@ router.get('/dashboard/stats', authenticate, requireApproved, async (req, res) =
         ]);
 
         const parcelasStats = await Orcamento.aggregate([
-            { $match: { created_by: req.user._id, 'pagamento.parcelas': { $exists: true, $not: { $size: 0 } } } },
+            {
+                $match: {
+                    created_by: req.user._id,
+                    status: 'aprovado',
+                    'pagamento.parcelas': { $exists: true, $not: { $size: 0 } }
+                }
+            },
             { $unwind: '$pagamento.parcelas' },
             {
                 $group: {
